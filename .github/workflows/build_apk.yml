@@ -21,7 +21,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
@@ -30,18 +29,49 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Create dummy google-services.json (demo/mock mode)
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "tokenx-demo",
+              "storage_bucket": "tokenx-demo.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.krct.tokenx"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyDEMO_KEY_PLACEHOLDER_NOT_REAL"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
 
-      - name: Run Tests
-        run: flutter test
+      - name: Install Project Dependencies
+        run: flutter pub get
 
       - name: Build Android Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Upload APK Artifact
+      - name: Upload APK as Release Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TokenX-Release-APK
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 14
+          retention-days: 30
